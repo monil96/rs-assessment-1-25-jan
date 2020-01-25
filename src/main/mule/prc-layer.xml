@@ -24,15 +24,13 @@ http://www.mulesoft.org/schema/mule/secure-properties http://www.mulesoft.org/sc
 		<email:smtp-connection host="smtp.gmail.com" port="465" user="monilp1996@gmail.com" password="mpgl08#96" />
 	</email:smtp-config>
 	<configuration doc:name="Configuration" doc:id="33f19d42-f824-4a24-a879-801f919ee1e3" defaultErrorHandler-ref="error-handlerError_Handler" >
-		<cluster:cluster-config >
-			<cluster:reliable-store-profile />
-		</cluster:cluster-config>
+
 	</configuration>
 	<secure-properties:config name="Secure_Properties_Config" doc:name="Secure Properties Config" doc:id="58f38e31-c36a-477f-a761-80189f33ccbe" file="secure.properties" key="monil" >
 		<secure-properties:encrypt algorithm="Blowfish" />
 	</secure-properties:config>
 	<sub-flow name="prc-layerSub_Flow" doc:id="29ed7864-fcf8-4d05-9df8-333465386f76" >
-		<flow-ref doc:name="sys-layerSub_Flow" doc:id="5cac06f5-6a27-46da-9376-08566b17870d" name="sys-layerSub_Flow"/>
+		<flow-ref doc:name="sys-layerSub_Flow" doc:id="5cac06f5-6a27-46da-9376-08566b17870d" name="sys-layerSub_Flow" />
 		<ee:transform doc:name="Transform Message" doc:id="afd20dec-3a9b-4396-b8b4-81431814f980" >
 			<ee:message >
 				<ee:set-payload ><![CDATA[%dw 2.0
