@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<error-handler name="error-handlerError_Handler" doc:id="8ae69ec3-3501-4e23-b7f2-43522b61641f" >
+		<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="d489e943-51da-46ea-a830-ce6bf2a0834d" type="EXPRESSION">
+			<ee:transform doc:name="Transform Message" doc:id="0dcdf0cd-c145-4dfc-9177-db84fa850930" >
+				<ee:message >
+					<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"Error" : "Please check the input data format"
+}]]></ee:set-payload>
+				</ee:message>
+			</ee:transform>
+		</on-error-propagate>
+		<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="6baadcd6-96e5-470c-a7e6-0822ac76f84f" type="STREAM_MAXIMUM_SIZE_EXCEEDED">
+			<ee:transform doc:name="Transform Message" doc:id="eaee115f-ab9f-40b1-abb7-cc07d22265f6" >
+				<ee:message >
+					<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+{
+	"Error" : "STREAM_MAXIMUM_SIZE_EXCEEDED"
+}]]></ee:set-payload>
+				</ee:message>
+			</ee:transform>
+		</on-error-propagate>
+		<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="eff9ec6e-60bc-4eec-997a-322b3c15d75e" type="ANY">
+			<ee:transform doc:name="Transform Message" doc:id="18a53bb1-8404-471c-b5e2-e3cab61f4707" >
+				<ee:message >
+					<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+				</ee:message>
+			</ee:transform>
+		</on-error-propagate>
+	</error-handler>
+</mule>

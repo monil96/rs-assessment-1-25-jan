@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:secure-properties="http://www.mulesoft.org/schema/mule/secure-properties" xmlns:cluster="http://www.mulesoft.org/schema/mule/ee/cluster"
+	xmlns:email="http://www.mulesoft.org/schema/mule/email"
+	xmlns:os="http://www.mulesoft.org/schema/mule/os" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:batch="http://www.mulesoft.org/schema/mule/batch" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/batch http://www.mulesoft.org/schema/mule/batch/current/mule-batch.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/os http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd
+http://www.mulesoft.org/schema/mule/email http://www.mulesoft.org/schema/mule/email/current/mule-email.xsd
+http://www.mulesoft.org/schema/mule/secure-properties http://www.mulesoft.org/schema/mule/secure-properties/current/mule-secure-properties.xsd">
+	<db:config name="Employee_Database_Config" doc:name="Database Config" doc:id="69a164f0-8589-4152-b007-27ff09501a37" >
+		<db:my-sql-connection host="${db.host}" port="${db.port}" user="${secure::user}" password="${secure::password}" database="${db.database}" />
+	</db:config>
+	<http:request-config name="HTTP_Request_configuration" doc:name="HTTP Request configuration" doc:id="c96e34ff-0ed1-45b2-b1e4-274b59eb48ad">
+		<http:request-connection host="dummy.restapiexample.com" />
+	</http:request-config>
+	<os:config name="ObjectStore_Config" doc:name="ObjectStore Config" doc:id="f99ddce7-6397-42ed-8d7c-eecec83675a5" >
+		<os:connection />
+	</os:config>
+	<os:object-store name="Object_store" doc:name="Object store" doc:id="d630dd88-cf20-4776-aa6f-b08f8efc8a87" config-ref="ObjectStore_Config" />
+	<email:smtp-config name="Email_SMTP" doc:name="Email SMTP" doc:id="a5946e48-a284-430d-8df8-90da4a9fe0f0" >
+		<email:smtp-connection host="smtp.gmail.com" port="465" user="monilp1996@gmail.com" password="mpgl08#96" />
+	</email:smtp-config>
+	<configuration doc:name="Configuration" doc:id="33f19d42-f824-4a24-a879-801f919ee1e3" defaultErrorHandler-ref="error-handlerError_Handler" >
+		<cluster:cluster-config >
+			<cluster:reliable-store-profile />
+		</cluster:cluster-config>
+	</configuration>
+	<secure-properties:config name="Secure_Properties_Config" doc:name="Secure Properties Config" doc:id="58f38e31-c36a-477f-a761-80189f33ccbe" file="secure.properties" key="monil" >
+		<secure-properties:encrypt algorithm="Blowfish" />
+	</secure-properties:config>
+	<sub-flow name="prc-layerSub_Flow" doc:id="29ed7864-fcf8-4d05-9df8-333465386f76" >
+		<flow-ref doc:name="sys-layerSub_Flow" doc:id="5cac06f5-6a27-46da-9376-08566b17870d" name="sys-layerSub_Flow"/>
+		<ee:transform doc:name="Transform Message" doc:id="afd20dec-3a9b-4396-b8b4-81431814f980" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<email:send doc:name="Send" doc:id="81710563-6087-40e4-a8d3-63964c1d75fb" config-ref="Email_SMTP" toAddresses="monilp1996@gmail.com" fromAddress="monilp1996@gmail.com" subject="Record inserted successfully"/>
+	</sub-flow>
+	<flow name="prc-layerFlow1" doc:id="ccea9b90-05d8-4ac8-bf1e-64501f1e2d03" >
+		<http:request method="GET" doc:name="Request" doc:id="56771610-f85f-46d5-8f7f-a2073fcfbb92" config-ref="HTTP_Request_configuration" path="/api/v1/employees"/>
+		<logger level="INFO" doc:name="Logger" doc:id="670c1cd9-e839-4bbd-90bd-cea47275101c" message="#[payload]"/>
+		<ee:transform doc:name="Transform Message" doc:id="938e1b28-bc63-4734-9ff9-29167c020635" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+payload.data map ((value,index) ->
+	{
+		id: value.id,
+		name: value.employee_name,
+		salary: value.employee_salary,
+		age: value.employee_age,
+		image: value.profile_image
+	}
+)]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<batch:job jobName="prc-layerBatch_Job1" doc:id="757215f7-3e56-4d64-8df6-892a65bdcd31" >
+			<batch:process-records >
+				<batch:step name="Batch_Step1" doc:id="fce986ce-8b13-40d7-a567-38ba9a893834" >
+					<os:store doc:name="employee_name" doc:id="09f68058-b9f9-4dc5-9ebd-a60fd69151d4" key="employee_name" objectStore="Object_store">
+						<os:value><![CDATA[#[payload.name]]]></os:value>
+					</os:store>
+					<os:store doc:name="employee_id" doc:id="4943f38d-6954-455a-9c8d-c514a9071313" key="employee_id" objectStore="Object_store">
+						<os:value><![CDATA[#[payload.id]]]></os:value>
+					</os:store>
+					<flow-ref doc:name="sys-layerSub_Flow" doc:id="5e33ac99-f7d7-4f15-8666-47faf70e6ad3" name="sys-layerSub_Flow"/>
+				</batch:step>
+			</batch:process-records>
+			<batch:on-complete >
+				<logger level="INFO" doc:name="Logger" doc:id="ce539a2f-5c72-418f-9d38-41185e3c5825" message="Records are inserted"/>
+			</batch:on-complete>
+		</batch:job>
+		<set-payload value="Data is being inserted sequentially in a patch process, please check Console." doc:name="Optional : Custom Response to be set" doc:id="0f394e56-dbf3-4732-a067-9efa8958f1ac" />
+	</flow>
+	<sub-flow name="prc-layerSub_Flow1" doc:id="96f3bcbf-57da-46dc-9bd9-513ce25d40ce" >
+		<os:retrieve doc:name="Retrieving employee_id" doc:id="f42394f7-4ca4-4bfd-a59e-060717f0a653" key="employee_id" target="fetched_id" objectStore="Object_store"/>
+		<choice doc:name="Choice" doc:id="3a9098b3-b288-4c40-9b21-0219252078ba" >
+			<when expression="#[vars.fetched_id == vars.id]">
+				<os:retrieve doc:name="Retrieve" doc:id="f36f2ee9-8eed-4eec-a2a9-428b1ab46c87" key="employee_name" objectStore="Object_store"/>
+				<logger level="INFO" doc:name="Logger" doc:id="cf6ffeb1-92d4-46b8-a199-12cb3bcab64a" message="Printed from Object store"/>
+			</when>
+			<otherwise >
+				<flow-ref doc:name="sys-layerSub_Flow1" doc:id="810a8b36-b832-4d68-8998-86aec1068927" name="sys-layerSub_Flow1"/>
+				<ee:transform doc:name="Transform Message" doc:id="45ab9030-96a5-41e0-8e75-82e6cfae86f5">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+			</otherwise>
+		</choice>
+	</sub-flow>
+</mule>

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<configuration-properties doc:name="Configuration properties" doc:id="af92a3db-33b4-4500-9769-0630f07d2e6c" file="properties.yaml" />
+	<sub-flow name="sys-layerSub_Flow" doc:id="1eb119e4-1b0d-4d8a-b456-dae201a2febb" >
+		<db:insert doc:name="Insert" doc:id="393523d1-3bb0-4c79-bb1d-95cf4e8e2d2f" config-ref="Employee_Database_Config" >
+			<db:sql >INSERT INTO `employee`(`emp_id`, `emp_name`, `salary`, `age`, `image`) VALUES (:id,:name,:salary,:age,:image)</db:sql>
+			<db:input-parameters ><![CDATA[#[{'id': payload.id, 'name': payload.name, 'salary': payload.salary,'age':payload.salary, 'image': payload.image }]]]></db:input-parameters>
+		</db:insert>
+	</sub-flow>
+	<sub-flow name="sys-layerSub_Flow1" doc:id="66f9107c-38e8-4311-8445-2886e00e17d1" >
+		<db:select doc:name="Select" doc:id="bf0d352b-e3b2-46b5-a275-2b17086daef7" config-ref="Employee_Database_Config">
+			<db:sql>Select emp_name from employee WHERE emp_id = :id</db:sql>
+			<db:input-parameters><![CDATA[#[{'id': vars.id}]]]></db:input-parameters>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="7ca99368-9d26-4705-af25-6c2c4437628b" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</sub-flow>
+</mule>

@@ -1,0 +1,51 @@
+#%RAML 1.0
+title: employee_data
+
+traits:
+  client-credentials-required:
+    headers:
+      client_id:
+        type: string
+        example: 7b404180fbb84b099179a4126a9576ff
+      client_secret:
+        type: string
+        example: e241f4aa3eca4b2a8FA67A2FEF5754F8
+/employees:
+  get:
+    description: Returns employee data and also inserts the data into db
+    is: 
+      - client-credentials-required
+    responses:
+      200:
+        body:
+          application/json:
+            example:
+              !include example.raml
+  post:
+    description: Inserts the data passed as payload to the db
+    is:
+      - client-credentials-required:
+    body:
+      application/json:
+        example:
+          !include example.raml
+    responses:
+      201:
+        body:
+          application/json:
+            example:
+              !include postexample.raml
+
+  /{id}:
+    get:
+      description: Returns employee data and also inserts the data into db
+      is: 
+        - client-credentials-required
+      responses:
+        200:
+          body:
+            application/json:
+              example:
+                !include idexample.raml
+    
+    
